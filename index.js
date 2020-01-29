@@ -1,68 +1,63 @@
-// xzGWQwmxtzeHGzyFfvd6noPD1ykXJfqfZov8ba9U
+
 'use strict';
 
 // put your own value below!
-const searchURL = 'https://developer.nps.gov/api/v1/alerts';
+const apiKey = 'rGyWoeGVwHj03Eskgnczu6oYHu6SvpmiwjErBNmf'; 
+const apiUrl = 'https://developer.nps.gov/api/v1/parks';
 
-
-function formatQueryParams(params) {
-  const queryItems = Object.keys(params)
-    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
-  return queryItems.join('&');
+function formatQueryParams(params){
+    const queryItems = Object.keys(params)
+        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+        return queryItems.join('&');
 }
 
-function displayResults(responseJson) {
-  // if there are previous results, remove them
-  console.log(responseJson);
-  $('#results-list').empty();
-  // iterate through the items array
-  for (let i = 0; i < responseJson.items.length; i++){
-    // for each video object in the items 
-    //array, add a list item to the results 
-    //list with the video title, description,
-    //and thumbnail
-    $('#results-list').append(
-      `<li><h3>${responseJson.items[i].snippet.title}</h3>
-      <p>${responseJson.items[i].snippet.description}</p>
-      <img src='${responseJson.items[i].snippet.thumbnails.default.url}'>
-      </li>`
-    )};
-  //display the results section  
-  $('#results').removeClass('hidden');
-};
-GET Query Parameter
-function getYouTubeVideos(query, maxResults=10) {
-  const params = {
-    key: 'AIzaSyBMYHHhHGGo-bjKN9WUx1O1jMrTuDnrMkw',
-    maxResults,
-    parkCode: '',
-    stateCode: ''
-  };
-  const queryString = formatQueryParams(params)
-  const url = searchURL + '?' + queryString;
+function displayResults(responseJson, maxNumber){
 
-  console.log(url);
+    $('.result-box').empty();
 
-  fetch(url)
+    for (let i=0; i<responseJson.data.length & i<maxNumber; i++){
+        $('.result-box').append(
+            `<div>
+                <ul class="result-list">
+                    <li><h3>Full name: </h3><p class="result-header">${responseJson.data[i].name}</p></li>
+                    <li><h3>Description: </h3><p>${responseJson.data[i].description}</p></li>
+                    <li><h3>Website URL: </h3><a href="${responseJson.data[i].url}">${responseJson.data[i].url}</a></li>
+                </ul>
+            </div>`
+        )
+    }
+
+    $('.result-box').removeClass('hidden');
+}
+
+function getNationalPark(query, maxNumber=10){
+    const params = {
+        stateCode: query,
+        api_key: apiKey        
+    };
+    const queryString = formatQueryParams(params)
+    const url = apiUrl + '?' + queryString;
+
+    fetch(url)
     .then(response => {
-      if (response.ok) {
-        return response.json();
-      }
-      throw new Error(response.statusText);
+        if(response.ok){
+            return response.json();
+        }
+        throw new Error(response.statusText);
     })
-    .then(responseJson => displayResults(responseJson))
+    .then(responseJson => displayResults(responseJson, maxNumber))
     .catch(err => {
-      $('#js-error-message').text(`Something went wrong: ${err.message}`);
-    });
+        $('#js-error-message').text(`Something went wrong: ${err.message}`);
+    })
 }
 
-function watchForm() {
-  $('form').submit(event => {
-    event.preventDefault();
-    const searchTerm = $('#js-search-term').val();
-    const maxResults = $('#js-max-results').val();
-    getYouTubeVideos(searchTerm, maxResults);
-  });
+function watchForm(){
+    $('form').submit(event =>{
+        event.preventDefault();
+        const searchTerm = $('#js-search-term').val();
+        const maxNumber = $('#js-max-number').val();
+        getNationalPark(searchTerm, maxNumber);
+    });
 }
 
 $(watchForm);
